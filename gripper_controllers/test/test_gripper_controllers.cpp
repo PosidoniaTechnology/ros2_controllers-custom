@@ -31,6 +31,8 @@ using hardware_interface::LoanedCommandInterface;
 using hardware_interface::LoanedStateInterface;
 using GripperCommandAction = control_msgs::action::GripperCommand;
 using GoalHandle = rclcpp_action::ServerGoalHandle<GripperCommandAction>;
+using testing::SizeIs;
+using testing::UnorderedElementsAre;
 
 void GripperControllerTest::SetUpTestCase() { rclcpp::init(0, nullptr); }
 
@@ -89,6 +91,16 @@ TEST_F(GripperControllerTest, ConfigureParamsSuccess)
   ASSERT_EQ(
     controller_->on_configure(rclcpp_lifecycle::State()),
     controller_interface::CallbackReturn::SUCCESS);
+
+  // check interface configuration
+  auto cmd_if_conf = this->controller_->command_interface_configuration();
+  ASSERT_THAT(cmd_if_conf.names, SizeIs(1lu));
+  ASSERT_THAT(cmd_if_conf.names, UnorderedElementsAre(std::string("joint_1/") + TypeParam::value));
+  EXPECT_EQ(cmd_if_conf.type, controller_interface::interface_configuration_type::INDIVIDUAL);
+  auto state_if_conf = this->controller_->state_interface_configuration();
+  ASSERT_THAT(state_if_conf.names, SizeIs(2lu));
+  ASSERT_THAT(state_if_conf.names, UnorderedElementsAre("joint_1/position", "joint_1/velocity"));
+  EXPECT_EQ(state_if_conf.type, controller_interface::interface_configuration_type::INDIVIDUAL);
 }
 
 TEST_F(GripperControllerTest, ActivateWithWrongJointsNamesFails)

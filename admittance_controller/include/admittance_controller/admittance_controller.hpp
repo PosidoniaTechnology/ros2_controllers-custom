@@ -127,9 +127,11 @@ protected:
 
   // internal reference values
   const std::vector<std::string> allowed_reference_interfaces_types_ = {
-    hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY};
+    hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+    hardware_interface::HW_IF_ACCELERATION};
   std::vector<std::reference_wrapper<double>> position_reference_;
   std::vector<std::reference_wrapper<double>> velocity_reference_;
+  std::vector<std::reference_wrapper<double>> acceleration_reference_;
 
   // Admittance rule and dependent variables;
   std::unique_ptr<admittance_controller::AdmittanceRule> admittance_;

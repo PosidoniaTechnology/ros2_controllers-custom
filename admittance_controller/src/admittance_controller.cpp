@@ -120,6 +120,7 @@ AdmittanceController::on_export_reference_interfaces()
   reference_interfaces_.resize(num_chainable_interfaces, std::numeric_limits<double>::quiet_NaN());
   position_reference_ = {};
   velocity_reference_ = {};
+  acceleration_reference_ = {};
 
   // assign reference interfaces
   auto index = 0ul;
@@ -132,6 +133,10 @@ AdmittanceController::on_export_reference_interfaces()
       else if (hardware_interface::HW_IF_VELOCITY == interface)
       {
         velocity_reference_.emplace_back(reference_interfaces_[index]);
+      }
+      else if (hardware_interface::HW_IF_ACCELERATION == interface)
+      {
+        acceleration_reference_.emplace_back(reference_interfaces_[index]);
       }
       const auto full_name = joint + "/" + interface;
       chainable_command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -188,7 +193,9 @@ controller_interface::CallbackReturn AdmittanceController::on_configure(
   // validate exported interfaces
   for (const auto & tmp : admittance_->parameters_.chainable_command_interfaces)
   {
-    if (tmp == hardware_interface::HW_IF_POSITION || tmp == hardware_interface::HW_IF_VELOCITY)
+    if (
+      tmp == hardware_interface::HW_IF_POSITION || tmp == hardware_interface::HW_IF_VELOCITY ||
+      tmp == hardware_interface::HW_IF_ACCELERATION)
     {
       RCLCPP_INFO(
         get_node()->get_logger(), "%s", ("chainable int types are: " + tmp + "\n").c_str());
@@ -391,6 +398,10 @@ controller_interface::return_type AdmittanceController::update_reference_from_su
     {
       velocity_reference_[i].get() = joint_command_msg_->velocities[i];
     }
+    for (size_t i = 0; i < joint_command_msg_->accelerations.size(); ++i)
+    {
+      acceleration_reference_[i].get() = joint_command_msg_->accelerations[i];
+    }
   }
 
   return controller_interface::return_type::OK;
@@ -441,6 +452,7 @@ controller_interface::CallbackReturn AdmittanceController::on_deactivate(
   {
     position_reference_[i].get() = std::numeric_limits<double>::quiet_NaN();
     velocity_reference_[i].get() = std::numeric_limits<double>::quiet_NaN();
+    acceleration_reference_[i].get() = std::numeric_limits<double>::quiet_NaN();
   }
 
   for (size_t index = 0; index < allowed_interface_types_.size(); ++index)
@@ -578,10 +590,18 @@ void AdmittanceController::read_state_reference_interfaces(
       velocity_reference_[i].get() = last_reference_.velocities[i];
     }
     state_reference.velocities[i] = velocity_reference_[i];
+
+    // update acceleration
+    if (std::isnan(acceleration_reference_[i]))
+    {
+      acceleration_reference_[i].get() = last_reference_.accelerations[i];
+    }
+    state_reference.accelerations[i] = acceleration_reference_[i];
   }
 
   last_reference_.positions = state_reference.positions;
   last_reference_.velocities = state_reference.velocities;
+  last_reference_.accelerations = state_reference.accelerations;
 }
 
 }  // namespace admittance_controller

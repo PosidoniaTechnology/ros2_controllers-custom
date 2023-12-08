@@ -547,7 +547,7 @@ void AdmittanceController::write_state_to_hardware(
   // if any interface has nan values, assume state_commanded is the last command state
   size_t pos_ind = 0;
   size_t vel_ind = pos_ind + has_velocity_command_interface_;
-  size_t acc_ind = vel_ind + has_acceleration_state_interface_;
+  size_t acc_ind = vel_ind + has_acceleration_command_interface_;
   for (size_t joint_ind = 0; joint_ind < num_joints_; ++joint_ind)
   {
     if (has_position_command_interface_)
@@ -555,15 +555,15 @@ void AdmittanceController::write_state_to_hardware(
       command_interfaces_[pos_ind * num_joints_ + joint_ind].set_value(
         state_commanded.positions[joint_ind]);
     }
-    else if (has_velocity_command_interface_)
+    if (has_velocity_command_interface_)
     {
       command_interfaces_[vel_ind * num_joints_ + joint_ind].set_value(
-        state_commanded.positions[joint_ind]);
+        state_commanded.velocities[joint_ind]);
     }
-    else if (has_acceleration_command_interface_)
+    if (has_acceleration_command_interface_)
     {
       command_interfaces_[acc_ind * num_joints_ + joint_ind].set_value(
-        state_commanded.positions[joint_ind]);
+        state_commanded.accelerations[joint_ind]);
     }
   }
   last_commanded_ = state_commanded;

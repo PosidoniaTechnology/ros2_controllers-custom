@@ -247,7 +247,7 @@ protected:
   JOINT_TRAJECTORY_CONTROLLER_PUBLIC
   void preempt_active_goal();
   JOINT_TRAJECTORY_CONTROLLER_PUBLIC
-  void set_hold_position();
+  virtual void set_hold_position();
 
   JOINT_TRAJECTORY_CONTROLLER_PUBLIC
   bool reset();

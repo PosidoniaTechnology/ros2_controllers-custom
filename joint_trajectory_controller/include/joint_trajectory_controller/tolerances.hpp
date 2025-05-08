@@ -67,6 +67,8 @@ struct SegmentTolerances
   /** State tolerances that apply for the goal state only.*/
   std::vector<StateTolerances> goal_state_tolerance;
 
+  std::vector<StateTolerances> relaxed_goal_state_tolerance;
+
   /** Extra time after the segment end time allowed to reach the goal state tolerances. */
   double goal_time_tolerance = 0.0;
 };
@@ -108,12 +110,16 @@ SegmentTolerances get_segment_tolerances(Params const & params)
     tolerances.state_tolerance[i].position = constraints.joints_map.at(joint).trajectory;
     tolerances.goal_state_tolerance[i].position = constraints.joints_map.at(joint).goal;
     tolerances.goal_state_tolerance[i].velocity = constraints.stopped_velocity_tolerance;
+    tolerances.relaxed_goal_state_tolerance[i].position = constraints.joints_map.at(joint).goal_relaxed;
+    tolerances.relaxed_goal_state_tolerance[i].velocity = constraints.stopped_velocity_tolerance;
 
     auto logger = rclcpp::get_logger("tolerance");
     RCLCPP_DEBUG(
       logger, "%s %f", (joint + ".trajectory").c_str(), tolerances.state_tolerance[i].position);
     RCLCPP_DEBUG(
       logger, "%s %f", (joint + ".goal").c_str(), tolerances.goal_state_tolerance[i].position);
+    RCLCPP_DEBUG(
+      logger, "%s %f", (joint + ".goal_relaxed").c_str(), tolerances.relaxed_goal_state_tolerance[i].position);
   }
 
   return tolerances;

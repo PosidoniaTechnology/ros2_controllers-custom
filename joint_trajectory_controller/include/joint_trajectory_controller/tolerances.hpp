@@ -104,6 +104,8 @@ SegmentTolerances get_segment_tolerances(Params const & params)
   // State and goal state tolerances
   tolerances.state_tolerance.resize(n_joints);
   tolerances.goal_state_tolerance.resize(n_joints);
+  tolerances.relaxed_goal_state_tolerance.resize(n_joints);
+
   for (size_t i = 0; i < n_joints; ++i)
   {
     auto const joint = params.joints[i];

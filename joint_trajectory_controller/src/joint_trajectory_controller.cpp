@@ -1378,14 +1378,30 @@ bool JointTrajectoryController::validate_trajectory_point_field(
 bool JointTrajectoryController::validate_trajectory_msg(
   const trajectory_msgs::msg::JointTrajectory & trajectory) const
 {
+  // Count joints that should be ignored during validation
+  size_t ignored_joints_count = 0;
+  for (const auto & joint_name : trajectory.joint_names)
+  {
+    if (std::find(
+          params_.ignore_joints_on_validation.begin(), params_.ignore_joints_on_validation.end(),
+          joint_name) != params_.ignore_joints_on_validation.end())
+    {
+      ignored_joints_count++;
+    }
+  }
+
+  // Calculate the effective joint count (excluding ignored joints)
+  const size_t effective_joint_count = trajectory.joint_names.size() - ignored_joints_count;
+
   // If partial joints goals are not allowed, goal should specify all controller joints
   if (!params_.allow_partial_joints_goal)
   {
-    if (trajectory.joint_names.size() != dof_)
+    if (effective_joint_count != dof_)
     {
       RCLCPP_ERROR(
         get_node()->get_logger(),
-        "Joints on incoming trajectory don't match the controller joints.");
+        "Joints on incoming trajectory don't match the controller joints. Expected %zu, got %zu (ignoring %zu joints).",
+        dof_, effective_joint_count, ignored_joints_count);
       return false;
     }
   }
@@ -1420,6 +1436,18 @@ bool JointTrajectoryController::validate_trajectory_msg(
   for (size_t i = 0; i < trajectory.joint_names.size(); ++i)
   {
     const std::string & incoming_joint_name = trajectory.joint_names[i];
+
+    // Check if this joint should be ignored during validation
+    bool is_ignored = std::find(
+                        params_.ignore_joints_on_validation.begin(),
+                        params_.ignore_joints_on_validation.end(),
+                        incoming_joint_name) != params_.ignore_joints_on_validation.end();
+
+    if (is_ignored)
+    {
+      // Skip validation for ignored joints
+      continue;
+    }
 
     auto it = std::find(params_.joints.begin(), params_.joints.end(), incoming_joint_name);
     if (it == params_.joints.end())
@@ -1459,6 +1487,8 @@ bool JointTrajectoryController::validate_trajectory_msg(
     }
     previous_traj_time = trajectory.points[i].time_from_start;
 
+    // Use the full joint_count for trajectory points, as the points must include all joints
+    // (including ignored ones) for proper indexing
     const size_t joint_count = trajectory.joint_names.size();
     const auto & points = trajectory.points;
     // This currently supports only position, velocity and acceleration inputs

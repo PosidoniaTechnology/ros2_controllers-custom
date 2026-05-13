@@ -904,12 +904,12 @@ controller_interface::CallbackReturn JointTrajectoryController::on_configure(
 
   using namespace std::placeholders;
 
-  // Reduce result_timeout from the 900 s (15 min) default to 3 s.
+  // Reduce result_timeout from the 900 s (15 min) default to 10 s.
   // The default causes unbounded GoalStatusArray growth in CycloneDDS
-  // (see rmw_cyclonedds#388). 3 s is safe because execute_server registers
+  // (see rmw_cyclonedds#388). 10 s is safe because execute_server registers
   // its result future before the goal completes.
   rcl_action_server_options_t action_server_options = rcl_action_server_get_default_options();
-  action_server_options.result_timeout.nanoseconds = RCUTILS_S_TO_NS(3);
+  action_server_options.result_timeout.nanoseconds = RCUTILS_S_TO_NS(10);
 
   action_server_ = rclcpp_action::create_server<FollowJTrajAction>(
     get_node()->get_node_base_interface(), get_node()->get_node_clock_interface(),

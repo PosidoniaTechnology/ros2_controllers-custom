@@ -1542,6 +1542,23 @@ bool JointTrajectoryController::validate_trajectory_msg(
 void JointTrajectoryController::add_new_trajectory_msg(
   const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> & traj_msg)
 {
+  // When force_cubic_interpolation is enabled (default), strip endpoint
+  // accelerations so Trajectory::interpolate_between_points falls back from
+  // quintic to cubic Hermite. Quintic must match endpoint accelerations
+  // exactly; with the bang-bang acceleration profile that TOTG emits at
+  // switching points, the resulting polynomial overshoots its endpoint
+  // bounds (we've measured >2x on real Thor traces, +/-6 rad/s^2 planner
+  // bounds producing +10.78 commanded peak on the wire). Cubic Hermite
+  // derives acceleration from the (pos, vel) profile, which stays
+  // bounded by the local slope geometry. See PR for full incident
+  // analysis (cb2449 J4 IMU collision trip).
+  if (params_.force_cubic_interpolation)
+  {
+    for (auto & point : traj_msg->points)
+    {
+      point.accelerations.clear();
+    }
+  }
   traj_msg_external_point_ptr_.writeFromNonRT(traj_msg);
 }
 

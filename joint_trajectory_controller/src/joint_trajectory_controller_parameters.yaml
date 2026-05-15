@@ -74,6 +74,11 @@ joint_trajectory_controller:
       one_of<>: [["splines", "none"]],
     }
   }
+  force_cubic_interpolation: {
+    type: bool,
+    default_value: true,
+    description: "If true, strip endpoint accelerations from incoming trajectories so the spline sampler falls back to cubic Hermite. The default quintic-Hermite branch must match endpoint accelerations exactly, which overshoots the planner-stated acceleration bounds (often by >2x) when consecutive waypoints have opposite-sign accelerations - a normal output pattern of TOTG/bang-bang time parameterization at switching points. Cubic Hermite derives acceleration from the (pos, vel) profile, bounding it by the local slope geometry and avoiding the overshoot. Set to false to restore the legacy quintic behaviour.",
+  }
   allow_nonzero_velocity_at_trajectory_end: {
     type: bool,
     default_value: true,

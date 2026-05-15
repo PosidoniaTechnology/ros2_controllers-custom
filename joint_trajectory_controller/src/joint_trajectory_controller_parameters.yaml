@@ -74,6 +74,11 @@ joint_trajectory_controller:
       one_of<>: [["splines", "none"]],
     }
   }
+  force_cubic_interpolation: {
+    type: bool,
+    default_value: true,
+    description: "If true, strip endpoint accelerations from incoming trajectories so the sampler uses cubic Hermite instead of quintic.",
+  }
   allow_nonzero_velocity_at_trajectory_end: {
     type: bool,
     default_value: true,

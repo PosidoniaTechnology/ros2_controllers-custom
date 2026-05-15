@@ -1542,6 +1542,13 @@ bool JointTrajectoryController::validate_trajectory_msg(
 void JointTrajectoryController::add_new_trajectory_msg(
   const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> & traj_msg)
 {
+  if (params_.force_cubic_interpolation)
+  {
+    for (auto & point : traj_msg->points)
+    {
+      point.accelerations.clear();
+    }
+  }
   traj_msg_external_point_ptr_.writeFromNonRT(traj_msg);
 }
 
